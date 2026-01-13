@@ -1,8 +1,9 @@
 import express from 'express'
 import { PingCounterServicePort } from '../../../core/ports/driving/ping-counter.service.port'
 import { IncrementFailedError } from '../../../core/domain/ping-counter.entity'
+import { HistoryCounterServicePort } from '../../../core/ports/driving/history-counter.service.port'
 
-export function buildPingCounterRouter(service: PingCounterServicePort) {
+export function buildPingCounterRouter(service: PingCounterServicePort, historyService: HistoryCounterServicePort) {
   const router = express.Router()
 
   router.get('/ping', async (req, res) => {
@@ -19,7 +20,7 @@ export function buildPingCounterRouter(service: PingCounterServicePort) {
       res.json({ id: counter.id, count: counter.count })
     } catch (error) {
       if (error instanceof IncrementFailedError) {
-        return res.status(400).json({ error: error.message })
+        return res.status(409).json({ error: error.message })
       }
       return res.status(500).json({ error: 'Internal Server Error' })
     }
@@ -28,6 +29,23 @@ export function buildPingCounterRouter(service: PingCounterServicePort) {
     try {
       const counter = await service.resetPingCounter()
       res.json({ id: counter.id, count: counter.count })
+    } catch (error) {
+      return res.status(500).json({ error: 'Internal Server Error' })
+    }
+  })
+
+  router.get('/history', async (req, res) => {
+    try {
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : undefined
+      const history = await historyService.getHistory(limit)
+
+      res.json({
+        history: history.map((h) => ({
+          counterId: h.id,
+          action: h.action,
+          timestamp: h.timestamp,
+        })),
+      })
     } catch (error) {
       return res.status(500).json({ error: 'Internal Server Error' })
     }

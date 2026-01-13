@@ -5,6 +5,8 @@ import { MongoClient } from 'mongodb'
 import { PingCounterService } from './core/services/ping-counter.service'
 import { PingCounterRepository } from './adapters/secondary/database/ping-counter.repository'
 import { buildPingCounterRouter } from './adapters/primary/http/ping-counter.controller'
+import { HistoryCounterRepository } from './adapters/secondary/database/history-counter.repository'
+import { HistoryCounterService } from './core/services/history-counter.service'
 
 async function bootstrap() {
   const app = express()
@@ -20,12 +22,29 @@ async function bootstrap() {
   await client.connect()
   const db = client.db(dbName)
 
-  const repo = new PingCounterRepository(db)
-  const service = new PingCounterService(repo)
-  app.use('/', buildPingCounterRouter(service))
+  const pingCounterRepo = new PingCounterRepository(db)
+  const historyRepo = new HistoryCounterRepository(db)
+  const historyService = new HistoryCounterService(historyRepo)
+  const pingCounterService = new PingCounterService(pingCounterRepo, historyService)
+
+  app.use('/', buildPingCounterRouter(pingCounterService, historyService))
 
   const port = process.env.PORT || 3000
-  app.listen(port, () => console.log(`HTTP listening on ${port}`))
+  const server = app.listen(port, () => console.log(`HTTP listening on ${port}`))
+
+  process.on('SIGINT', async () => {
+    console.log('Shutting down...')
+    server.close(() => console.log('HTTP server closed'))
+    await client.close()
+    process.exit(0)
+  })
+
+  process.on('SIGTERM', async () => {
+    console.log('Shutting down...')
+    server.close(() => console.log('HTTP server closed'))
+    await client.close()
+    process.exit(0)
+  })
 }
 
 bootstrap().catch((e) => {

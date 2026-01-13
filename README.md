@@ -1,7 +1,7 @@
 ## Hexagonal Architecture là gì ?
 
 - Hexagonal Architecture là cách tổ chức code nhằm mục địch tách nghiệp vụ (domain) với các yêu tố khác (UI, DB, framework, API)
-- Mục đích:
+- Mục đích: dễ maintain khi có thay đổi, dễ test (test ngay ở phần logic nghiệp vụ mà không cần quan tâm adapter dùng công nghệ gì)
 
 ## Các thành phần chính
 
@@ -33,3 +33,26 @@
   - nhận y/c từ user/ api -> code chuyển đổi thành Domain Object -> truyền vào Inbound Ports
 - **Secondary Adapter**:
   - nhận Domain Object từ Outbound Ports -> code
+
+## Test trong Hexagonal
+
+- test theo các layer
+- Domain (Entity): test độc lập hoàn toàn
+- Services (Application): phải mock các Post để test
+
+### các bước viết test
+
+- gồm 3 bước Arrange - Act - Assert
+  - B1 Arrange: setup data và mock
+  - B2 Act: thực hiện action
+  - B3 Assert: verify kết quả
+
+### các hàm Verify thường dùng (Vitest)
+
+toBeInstanceOf( ... ) - Verify cùng kiểu dữ liệu
+toHaveBeenCalledWith(...) - Verify tham số của bất kỳ lần gọi nào
+toHaveBeenLastCalledWith(...) - Verify lần gọi cuối
+toHaveBeenNthCalledWith(n, ...) - Verify lần gọi thứ n
+toHaveBeenCalledTimes(n) - Verify số lần gọi
+expect.objectContaining({...}) - Partial match object
+not.toHaveBeenCalled() - Verify không được gọi

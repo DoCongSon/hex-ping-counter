@@ -3,8 +3,16 @@ import { PingCounterRepositoryPort } from '../../../core/ports/driven/ping-count
 import { PingCounter } from '../../../core/domain/ping-counter.entity'
 
 type PingCounterDoc = {
-  id: string
+  _id: string
   count: number
+}
+
+function toDoc(entity: PingCounter): PingCounterDoc {
+  return { _id: entity.id, count: entity.count }
+}
+
+function toDomain(doc: PingCounterDoc): PingCounter {
+  return new PingCounter(doc._id, doc.count)
 }
 
 export class PingCounterRepository implements PingCounterRepositoryPort {
@@ -15,18 +23,13 @@ export class PingCounterRepository implements PingCounterRepositoryPort {
   }
 
   async getById(id: string): Promise<PingCounter | null> {
-    const doc = await this.counters.findOne({ id })
-    if (!doc) {
-      return null
-    }
-    return new PingCounter(doc.id, doc.count)
+    const doc = await this.counters.findOne({ _id: id })
+    if (!doc) return null
+    return toDomain(doc)
   }
 
-  async reset(id: string): Promise<void> {
-    await this.counters.updateOne({ id }, { $set: { count: 0 } }, { upsert: true })
-  }
-
-  async save(pingCounter: PingCounter): Promise<void> {
-    await this.counters.updateOne({ id: pingCounter.id }, { $set: { count: pingCounter.count } }, { upsert: true })
+  async save(counter: PingCounter): Promise<void> {
+    const doc = toDoc(counter)
+    await this.counters.updateOne({ _id: doc._id }, { $set: { count: doc.count } }, { upsert: true })
   }
 }
