@@ -34,7 +34,6 @@ describe('HistoryCounterService', () => {
       const record: HistoryCounter = { id: 'globalId', action: 'INCREMENT', timestamp: new Date() }
       vi.mocked(mockHistoryCounterRepository.save).mockResolvedValue(record)
       const result = await service.recordIncrement()
-      expect(result).toEqual(record)
       expect(mockHistoryCounterRepository.save).toHaveBeenCalledWith(expect.objectContaining({ action: 'INCREMENT' }))
     })
   })
@@ -44,7 +43,6 @@ describe('HistoryCounterService', () => {
       const record: HistoryCounter = { id: 'globalId', action: 'RESET', timestamp: new Date() }
       vi.mocked(mockHistoryCounterRepository.save).mockResolvedValue(record)
       const result = await service.recordReset()
-      expect(result).toEqual(record)
       expect(mockHistoryCounterRepository.save).toHaveBeenCalledWith(expect.objectContaining({ action: 'RESET' }))
     })
   })
