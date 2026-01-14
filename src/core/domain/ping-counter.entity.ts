@@ -5,20 +5,32 @@ export class IncrementFailedError extends Error {
   }
 }
 
-export class DecrementFailedError extends Error {
-  constructor(message = 'Counter is at zero, cannot decrement') {
-    super(message)
-    this.name = 'DecrementFailedError'
+export type ActionType = 'RESET' | 'INCREMENT' | 'INITIAL'
+
+export class HistoryCounter {
+  constructor(public readonly action: ActionType, public readonly timestamp: Date) {}
+
+  static createReset(): HistoryCounter {
+    return new HistoryCounter('RESET', new Date())
+  }
+
+  static createIncrement(): HistoryCounter {
+    return new HistoryCounter('INCREMENT', new Date())
+  }
+
+  static createInitial(): HistoryCounter {
+    return new HistoryCounter('INITIAL', new Date())
   }
 }
 
 export class PingCounter {
   static readonly MAX_VALUE = 100
+  static readonly LIMIT_HISTORY = 10
 
-  constructor(public readonly id: string, public readonly count: number) {}
+  constructor(public readonly id: string, public readonly count: number, public readonly history: HistoryCounter[]) {}
 
   static createNew(id: string): PingCounter {
-    return new PingCounter(id, 0)
+    return new PingCounter(id, 0, [HistoryCounter.createInitial()])
   }
 
   canIncrement(): boolean {
@@ -29,17 +41,18 @@ export class PingCounter {
     if (!this.canIncrement()) {
       throw new IncrementFailedError()
     }
-    return new PingCounter(this.id, this.count + 1)
-  }
-
-  decrement(): PingCounter {
-    if (this.count <= 0) {
-      throw new DecrementFailedError()
-    }
-    return new PingCounter(this.id, this.count - 1)
+    const newHistory =
+      this.history.length >= PingCounter.LIMIT_HISTORY
+        ? [...this.history.slice(1), HistoryCounter.createIncrement()]
+        : [...this.history, HistoryCounter.createIncrement()]
+    return new PingCounter(this.id, this.count + 1, newHistory)
   }
 
   reset(): PingCounter {
-    return new PingCounter(this.id, 0)
+    const newHistory =
+      this.history.length >= PingCounter.LIMIT_HISTORY
+        ? [...this.history.slice(1), HistoryCounter.createReset()]
+        : [...this.history, HistoryCounter.createReset()]
+    return new PingCounter(this.id, 0, newHistory)
   }
 }
