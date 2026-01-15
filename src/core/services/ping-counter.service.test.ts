@@ -10,7 +10,7 @@ describe('PingCounterService', () => {
     const history = Array(historyLength)
       .fill(null)
       .map(() => new HistoryCounter('INCREMENT', new Date()))
-    return new PingCounter('globalId', count, history)
+    return new PingCounter('test-id', count, history)
   }
 
   beforeEach(() => {
@@ -25,7 +25,7 @@ describe('PingCounterService', () => {
     it('should increment counter', async () => {
       const existingCounter = createCounter(5)
       vi.mocked(mockRepository.getById).mockResolvedValue(existingCounter)
-      const result = await service.incrementPingCounter()
+      const result = await service.incrementPingCounter('test-id')
       expect(result.count).toBe(6)
       expect(mockRepository.save).toHaveBeenCalledTimes(1)
     })
@@ -33,7 +33,7 @@ describe('PingCounterService', () => {
     it('should throw error when incrementing max counter', async () => {
       const maxCounter = createCounter(PingCounter.MAX_VALUE)
       vi.mocked(mockRepository.getById).mockResolvedValue(maxCounter)
-      await expect(service.incrementPingCounter()).rejects.toThrowError()
+      await expect(service.incrementPingCounter('test-id')).rejects.toThrowError()
       expect(mockRepository.save).not.toHaveBeenCalled()
     })
   })
@@ -42,7 +42,7 @@ describe('PingCounterService', () => {
     it('should reset existing counter', async () => {
       const existingCounter = createCounter(8)
       vi.mocked(mockRepository.getById).mockResolvedValue(existingCounter)
-      const result = await service.resetPingCounter()
+      const result = await service.resetPingCounter('test-id')
       expect(result.count).toBe(0)
       expect(mockRepository.save).toHaveBeenCalledTimes(1)
     })
@@ -52,13 +52,13 @@ describe('PingCounterService', () => {
     it('should return existing counter', async () => {
       const existingCounter = createCounter(7)
       vi.mocked(mockRepository.getById).mockResolvedValue(existingCounter)
-      const result = await service.getCurrentPingCounter()
+      const result = await service.getCurrentPingCounter('test-id')
       expect(result.count).toBe(7)
     })
 
     it('should create and return new counter if not exists', async () => {
       vi.mocked(mockRepository.getById).mockResolvedValue(null)
-      const result = await service.getCurrentPingCounter()
+      const result = await service.getCurrentPingCounter('test-id')
       expect(result.count).toBe(0)
       expect(mockRepository.save).toHaveBeenCalledTimes(1)
       expect(result.history.length).toBe(1)

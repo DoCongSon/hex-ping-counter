@@ -1,7 +1,7 @@
 import { PingCounter } from '../../domain/ping-counter.entity'
 
 export interface PingCounterServicePort {
-  incrementPingCounter(): Promise<PingCounter>
-  resetPingCounter(): Promise<PingCounter>
-  getCurrentPingCounter(): Promise<PingCounter>
+  incrementPingCounter(id: string): Promise<PingCounter>
+  resetPingCounter(id: string): Promise<PingCounter>
+  getCurrentPingCounter(id: string): Promise<PingCounter>
 }

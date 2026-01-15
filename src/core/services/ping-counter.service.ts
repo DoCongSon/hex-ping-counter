@@ -3,31 +3,29 @@ import { PingCounterRepositoryPort } from '../ports/driven/ping-counter.reposito
 import { PingCounterServicePort } from '../ports/driving/ping-counter.service.port'
 
 export class PingCounterService implements PingCounterServicePort {
-  private readonly globalId = 'globalId'
-
   constructor(private readonly pingCounterRepository: PingCounterRepositoryPort) {}
 
-  private async getOrCreateCounter(): Promise<PingCounter> {
-    const existing = await this.pingCounterRepository.getById(this.globalId)
+  private async getOrCreateCounter(id: string): Promise<PingCounter> {
+    const existing = await this.pingCounterRepository.getById(id)
     if (existing) return existing
-    const newCounter = PingCounter.createNew(this.globalId)
+    const newCounter = PingCounter.createNew(id)
     await this.pingCounterRepository.save(newCounter)
     return newCounter
   }
 
-  async getCurrentPingCounter(): Promise<PingCounter> {
-    return this.getOrCreateCounter()
+  async getCurrentPingCounter(id: string): Promise<PingCounter> {
+    return this.getOrCreateCounter(id)
   }
 
-  async incrementPingCounter(): Promise<PingCounter> {
-    const counter = await this.getOrCreateCounter()
+  async incrementPingCounter(id: string): Promise<PingCounter> {
+    const counter = await this.getOrCreateCounter(id)
     const incremented = counter.increment()
     await this.pingCounterRepository.save(incremented)
     return incremented
   }
 
-  async resetPingCounter(): Promise<PingCounter> {
-    const counter = await this.getOrCreateCounter()
+  async resetPingCounter(id: string): Promise<PingCounter> {
+    const counter = await this.getOrCreateCounter(id)
     const resetCounter = counter.reset()
     await this.pingCounterRepository.save(resetCounter)
     return resetCounter

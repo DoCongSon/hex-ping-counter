@@ -1,35 +1,47 @@
-import express from 'express'
+import { NextFunction, Request, Response, Router } from 'express'
 import { PingCounterServicePort } from '../../../core/ports/driving/ping-counter.service.port'
-import { IncrementFailedError } from '../../../core/domain/ping-counter.entity'
+import { UnauthorizedError } from './error-handler'
 
 export function buildPingCounterRouter(service: PingCounterServicePort) {
-  const router = express.Router()
+  const router = Router()
 
-  router.get('/ping', async (req, res) => {
+  router.get('/', async (req: Request, res: Response, next: NextFunction) => {
     try {
-      const counter = await service.getCurrentPingCounter()
-      res.json(counter)
-    } catch (error) {
-      return res.status(500).json({ error: 'Internal Server Error' })
-    }
-  })
-  router.post('/ping', async (req, res) => {
-    try {
-      const counter = await service.incrementPingCounter()
-      res.json(counter)
-    } catch (error) {
-      if (error instanceof IncrementFailedError) {
-        return res.status(409).json({ error: error.message })
+      const userId = req.user?.userId
+      if (!userId) {
+        next(new UnauthorizedError())
+        return
       }
-      return res.status(500).json({ error: 'Internal Server Error' })
-    }
-  })
-  router.post('/reset', async (req, res) => {
-    try {
-      const counter = await service.resetPingCounter()
+      const counter = await service.getCurrentPingCounter(userId)
       res.json(counter)
     } catch (error) {
-      return res.status(500).json({ error: 'Internal Server Error' })
+      next(error)
+    }
+  })
+  router.post('/', async (req, res, next: NextFunction) => {
+    try {
+      const userId = req.user?.userId
+      if (!userId) {
+        next(new UnauthorizedError())
+        return
+      }
+      const counter = await service.incrementPingCounter(userId)
+      res.json(counter)
+    } catch (error) {
+      next(error)
+    }
+  })
+  router.post('/reset', async (req, res, next: NextFunction) => {
+    try {
+      const userId = req.user?.userId
+      if (!userId) {
+        next(new UnauthorizedError())
+        return
+      }
+      const counter = await service.resetPingCounter(userId)
+      res.json(counter)
+    } catch (error) {
+      next(error)
     }
   })
   return router
