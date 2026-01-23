@@ -50,7 +50,7 @@ describe('AuthService', () => {
           email: 'john@example.com',
           username: 'john_doe',
         },
-        '1h'
+        '1h',
       )
     })
 
@@ -58,7 +58,7 @@ describe('AuthService', () => {
       vi.mocked(userRepository.getByEmail).mockResolvedValueOnce(null)
 
       await expect(authService.login('nonexistent@example.com', 'password')).rejects.toThrow(
-        'Invalid email or password'
+        'Invalid email or password',
       )
     })
 
@@ -96,7 +96,7 @@ describe('AuthService', () => {
       vi.mocked(userRepository.getByEmail).mockResolvedValueOnce(existingUser)
 
       await expect(authService.register('jane_doe', 'john@example.com', 'password123')).rejects.toThrow(
-        'Email already exists'
+        'Email john@example.com already exists',
       )
       expect(passwordHasher.hash).not.toHaveBeenCalled()
     })
@@ -136,7 +136,7 @@ describe('AuthService', () => {
       vi.mocked(userRepository.getById).mockResolvedValueOnce(null)
 
       await expect(authService.changePassword('nonexistent-user', 'oldPassword', 'newPassword')).rejects.toThrow(
-        'User not found'
+        'User not found',
       )
     })
 
@@ -147,7 +147,7 @@ describe('AuthService', () => {
       vi.mocked(passwordHasher.compare).mockResolvedValueOnce(false)
 
       await expect(authService.changePassword('user-1', 'wrongPassword', 'newPassword')).rejects.toThrow(
-        'Old password is incorrect'
+        'Old password is incorrect',
       )
       expect(passwordHasher.hash).not.toHaveBeenCalled()
       expect(userRepository.save).not.toHaveBeenCalled()
@@ -213,7 +213,7 @@ describe('AuthService', () => {
       vi.mocked(userRepository.getById).mockResolvedValueOnce(null)
 
       await expect(authService.changeUserInfo('nonexistent-user', 'jane_doe', undefined)).rejects.toThrow(
-        'User not found'
+        'User not found',
       )
     })
 
@@ -225,7 +225,7 @@ describe('AuthService', () => {
       vi.mocked(userRepository.getByEmail).mockResolvedValueOnce(existingUser)
 
       await expect(authService.changeUserInfo('user-1', undefined, 'jane@example.com')).rejects.toThrow(
-        'Email already exists'
+        'Email jane@example.com already exists',
       )
       expect(userRepository.save).not.toHaveBeenCalled()
     })
